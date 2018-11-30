@@ -300,6 +300,28 @@ float GYRO_AVERAGE_OFFSET_Z = 0.0;
 #endif
 
 #include <Wire.h>
+void Read_Accel();
+void Read_Gyro();
+void Read_Magn();
+void Compass_Heading();
+void Normalize(void);
+void Drift_correction(void);
+void Matrix_update(void);
+void Euler_angles(void);
+float Vector_Dot_Product(const float v1[3], const float v2[3]);
+void Vector_Cross_Product(float out[3], const float v1[3], const float v2[3]);
+void Vector_Scale(float out[3], const float v[3], float scale);
+void Vector_Add(float out[3], const float v1[3], const float v2[3]);
+void Matrix_Multiply(const float a[3][3], const float b[3][3], float out[3][3]);
+void Matrix_Vector_Multiply(const float a[3][3], const float b[3], float out[3]);
+void init_rotation_matrix(float m[3][3], float yaw, float pitch, float roll);
+void output_angles();
+void output_calibration(int calibration_sensor);
+void output_sensors_text(char raw_or_calibrated);
+void output_both_angles_and_sensors_text();
+void output_sensors_binary();
+void output_sensors();
+
 
 #define GRAVITY 256.0f // "1G reference" used for DCM filter and accelerometer calibration
 
@@ -507,18 +529,23 @@ void setup()
 {
   // Init serial output
   Serial.begin(OUTPUT__BAUD_RATE);
+  delay(1000);    
+  Serial.println("Setup");
+  delay(1000);    
   
   // Init status LED
   pinMode (STATUS_LED_PIN, OUTPUT);
   digitalWrite(STATUS_LED_PIN, LOW);
 
   // Init sensors
+  Serial.println("Init sensors");
   delay(50);  // Give sensors enough time to start
   I2C_Init();
   Accel_Init();
   Magn_Init();
   Gyro_Init();
   delay(50);  // Give sensors time 
+  Serial.println("Init sensors, done");
   
   // Read sensors, init DCM algorithm
   delay(20);  // Give sensors enough time to collect data
@@ -531,7 +558,7 @@ void setup()
   turn_output_stream_on();
 #endif
 }
-
+int loop_count = 0;
 // Main loop
 void loop()
 {
